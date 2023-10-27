@@ -1,13 +1,13 @@
 package com.devsuperior.dsmovie.services;
 
-import static org.mockito.ArgumentMatchers.any;
-
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -31,6 +31,7 @@ public class MovieServiceTests {
 	@Mock
 	private MovieRepository repository;
 
+	private Long existingId, nonExistingId;
 	private String movieTitle;
 	private MovieEntity movie;
 	@SuppressWarnings("unused")
@@ -39,13 +40,20 @@ public class MovieServiceTests {
 
 	@BeforeEach
 	void setUp() throws Exception {
-		movieTitle = "Test Movie";
+			existingId = 1L;
+		    nonExistingId = 2L;
+		    
+	        movieTitle = "Test Movie";
+	        
+	        movie = MovieFactory.createMovieEntity();
+	        page = new PageImpl<>(List.of(movie));
+	        movieDTO = MovieFactory.createMovieDTO();
 
-		movie = MovieFactory.createMovieEntity();
-		page = new PageImpl<>(List.of(movie));
-		movieDTO = MovieFactory.createMovieDTO();
 
-		Mockito.when(repository.searchByTitle(Mockito.anyString(), (Pageable) any())).thenReturn(page);
+	    Mockito.when(repository.searchByTitle(Mockito.anyString(), ArgumentMatchers.any(Pageable.class))).thenReturn(page);
+
+	    Mockito.when(repository.findById(existingId)).thenReturn(Optional.of(movie));
+        Mockito.when(repository.findById(nonExistingId)).thenReturn(Optional.empty());
 
 	}
 
@@ -55,39 +63,19 @@ public class MovieServiceTests {
 
 		Page<MovieDTO> result = service.findAll(movieTitle, pageable);
 		Assertions.assertEquals(1, result.getSize());
-		Assertions.assertEquals(movieTitle, result.getContent().get(0).getTitle());
+		for (MovieDTO movieDTO : result.getContent()) {
+	        Assertions.assertEquals(movieTitle, movieDTO.getTitle());
+	    }
 
 	}
 
 	@Test
 	public void findByIdShouldReturnMovieDTOWhenIdExists() {
-	}
 
-	@Test
-	public void findByIdShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist() {
-	}
+		MovieDTO result = service.findById(existingId);
 
-	@Test
-	public void insertShouldReturnMovieDTO() {
-	}
-
-	@Test
-	public void updateShouldReturnMovieDTOWhenIdExists() {
-	}
-
-	@Test
-	public void updateShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist() {
-	}
-
-	@Test
-	public void deleteShouldDoNothingWhenIdExists() {
-	}
-
-	@Test
-	public void deleteShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist() {
-	}
-
-	@Test
-	public void deleteShouldThrowDatabaseExceptionWhenDependentId() {
+		Assertions.assertNotNull(result);
+		Assertions.assertEquals(result.getId(), existingId);
+		Assertions.assertEquals(result.getTitle(), movie.getTitle());
 	}
 }
