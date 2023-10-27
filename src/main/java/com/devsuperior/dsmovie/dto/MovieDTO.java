@@ -33,11 +33,17 @@ public class MovieDTO {
 	private String image;
 
 	public MovieDTO(Long id, String title, Double score, Integer count, String image) {
-		this.id = id;
-		this.title = title;
-		this.score = Double.valueOf(df.format(score));
-		this.count = count;
-		this.image = image;
+	    this.id = id;
+	    this.title = title;
+	    
+	    if (score != null) {
+	        this.score = Double.valueOf(df.format(score));
+	    } else {
+	        this.score = null; 
+	    }
+	    
+	    this.count = count;
+	    this.image = image;
 	}
 
 	public MovieDTO(MovieEntity movie) {
