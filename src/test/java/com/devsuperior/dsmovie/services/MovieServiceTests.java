@@ -55,6 +55,7 @@ public class MovieServiceTests {
 		movie = MovieFactory.createMovieEntity();
 		page = new PageImpl<>(List.of(movie));
 		movieDTO = MovieFactory.createMovieDTO();
+		MovieEntity existingEntity = new MovieEntity();
 
 		Mockito.when(repository.searchByTitle(Mockito.anyString(), ArgumentMatchers.any(Pageable.class)))
 				.thenReturn(page);
@@ -63,6 +64,8 @@ public class MovieServiceTests {
 		Mockito.when(repository.findById(nonExistingId)).thenReturn(Optional.empty());
 
 		Mockito.when(repository.save(any())).thenReturn(movie);
+		
+		Mockito.when(repository.getReferenceById(existingId)).thenReturn(movie);
 
 	}
 
@@ -106,6 +109,15 @@ public class MovieServiceTests {
 		  Assertions.assertEquals(movieDTO.getId(), result.getId());
 		  
 	  }
+	@Test
+	   public void updateShouldReturnMovieDTOWhenIdExists() {
+		
+		MovieDTO result = service.update(existingId, movieDTO);
+		
+		 Assertions.assertNotNull(result);
+		 Assertions.assertEquals(existingId, result.getId());
+		   
+	   }
 	}
 
 
