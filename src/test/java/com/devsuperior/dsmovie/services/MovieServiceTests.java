@@ -96,5 +96,16 @@ public class MovieServiceTests {
 		});
 		assertFalse(exception.getMessage().contains("Recurso não encontrado " + nonExistingId));
 	}
+	
+	@Test
+	  public void insertShouldReturnMovieDTO() {
+		  
+		  MovieDTO result = service.insert(movieDTO);
+		  
+		  Assertions.assertNotNull(result);
+		  Assertions.assertEquals(movieDTO.getId(), result.getId());
+		  
+	  }
+	}
 
-}
+
