@@ -1,5 +1,11 @@
 package com.devsuperior.dsmovie.services;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +26,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.devsuperior.dsmovie.dto.MovieDTO;
 import com.devsuperior.dsmovie.entities.MovieEntity;
 import com.devsuperior.dsmovie.repositories.MovieRepository;
+import com.devsuperior.dsmovie.services.exceptions.ResourceNotFoundException;
 import com.devsuperior.dsmovie.tests.MovieFactory;
 
 @ExtendWith(SpringExtension.class)
@@ -40,20 +47,22 @@ public class MovieServiceTests {
 
 	@BeforeEach
 	void setUp() throws Exception {
-			existingId = 1L;
-		    nonExistingId = 2L;
-		    
-	        movieTitle = "Test Movie";
-	        
-	        movie = MovieFactory.createMovieEntity();
-	        page = new PageImpl<>(List.of(movie));
-	        movieDTO = MovieFactory.createMovieDTO();
+		existingId = 1L;
+		nonExistingId = 2L;
 
+		movieTitle = "Test Movie";
 
-	    Mockito.when(repository.searchByTitle(Mockito.anyString(), ArgumentMatchers.any(Pageable.class))).thenReturn(page);
+		movie = MovieFactory.createMovieEntity();
+		page = new PageImpl<>(List.of(movie));
+		movieDTO = MovieFactory.createMovieDTO();
 
-	    Mockito.when(repository.findById(existingId)).thenReturn(Optional.of(movie));
-        Mockito.when(repository.findById(nonExistingId)).thenReturn(Optional.empty());
+		Mockito.when(repository.searchByTitle(Mockito.anyString(), ArgumentMatchers.any(Pageable.class)))
+				.thenReturn(page);
+
+		Mockito.when(repository.findById(existingId)).thenReturn(Optional.of(movie));
+		Mockito.when(repository.findById(nonExistingId)).thenReturn(Optional.empty());
+
+		Mockito.when(repository.save(any())).thenReturn(movie);
 
 	}
 
@@ -64,8 +73,8 @@ public class MovieServiceTests {
 		Page<MovieDTO> result = service.findAll(movieTitle, pageable);
 		Assertions.assertEquals(1, result.getSize());
 		for (MovieDTO movieDTO : result.getContent()) {
-	        Assertions.assertEquals(movieTitle, movieDTO.getTitle());
-	    }
+			Assertions.assertEquals(movieTitle, movieDTO.getTitle());
+		}
 
 	}
 
@@ -78,4 +87,14 @@ public class MovieServiceTests {
 		Assertions.assertEquals(result.getId(), existingId);
 		Assertions.assertEquals(result.getTitle(), movie.getTitle());
 	}
+
+	@Test
+	public void findByIdThrowsResourceNotFoundExceptionWhenIdDoesNotExist() {
+
+		Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
+			service.findById(nonExistingId);
+		});
+		assertFalse(exception.getMessage().contains("Recurso não encontrado " + nonExistingId));
+	}
+
 }
