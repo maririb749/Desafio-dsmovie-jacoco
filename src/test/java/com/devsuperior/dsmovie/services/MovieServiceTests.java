@@ -15,6 +15,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +25,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.devsuperior.dsmovie.dto.MovieDTO;
 import com.devsuperior.dsmovie.entities.MovieEntity;
 import com.devsuperior.dsmovie.repositories.MovieRepository;
+import com.devsuperior.dsmovie.services.exceptions.DatabaseException;
 import com.devsuperior.dsmovie.services.exceptions.ResourceNotFoundException;
 import com.devsuperior.dsmovie.tests.MovieFactory;
 
@@ -39,6 +41,7 @@ public class MovieServiceTests {
 	private MovieRepository repository;
 
 	private Long existingId, nonExistingId;
+	private Long dependentId;
 	private String movieTitle;
 	private MovieEntity movie;
 	@SuppressWarnings("unused")
@@ -49,6 +52,7 @@ public class MovieServiceTests {
 	void setUp() throws Exception {
 		existingId = 1L;
 		nonExistingId = 2L;
+		dependentId = 3L;
 
 		movieTitle = "Test Movie";
 
@@ -69,8 +73,11 @@ public class MovieServiceTests {
 		Mockito.when(repository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
 
 		Mockito.when(repository.existsById(existingId)).thenReturn(true);
-
+		Mockito.when(repository.existsById(dependentId)).thenReturn(true);
 		Mockito.when(repository.existsById(nonExistingId)).thenReturn(false);
+
+		Mockito.doNothing().when(repository).deleteById(existingId);
+		Mockito.doThrow(DataIntegrityViolationException.class).when(repository).deleteById(dependentId);
 
 	}
 
@@ -102,7 +109,7 @@ public class MovieServiceTests {
 		Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
 			service.findById(nonExistingId);
 		});
-		assertFalse(exception.getMessage().contains("Recurso não encontrado " + nonExistingId));
+		Assertions.assertFalse(exception.getMessage().contains("Recurso não encontrado " + nonExistingId));
 	}
 
 	@Test
@@ -148,6 +155,16 @@ public class MovieServiceTests {
 
 		Assertions.assertThrows(ResourceNotFoundException.class, () -> {
 			service.delete(nonExistingId);
+
+		});
+
+	}
+
+	@Test
+	public void deleteShouldThrowDatabaseExceptionWhenDependentId() {
+
+		Assertions.assertThrows(DatabaseException.class, () -> {
+			service.delete(dependentId);
 
 		});
 
