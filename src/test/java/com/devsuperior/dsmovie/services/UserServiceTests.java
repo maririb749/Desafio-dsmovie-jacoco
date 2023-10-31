@@ -29,63 +29,66 @@ public class UserServiceTests {
 
 	@InjectMocks
 	private UserService service;
-	
+
 	@Mock
 	private UserRepository repository;
-	
+
 	@Mock
 	private CustomUserUtil userUtil;
-	
+
 	private String existingUsername;
 	private String nonExistingUsername;
 	private UserEntity user;
-	
-	
-	
+
+	private List<UserDetailsProjection> userDetails;
+
 	@BeforeEach
-	public void setUp()throws Exception  {
+	public void setUp() throws Exception {
 		existingUsername = "maria@gmail.com";
 		nonExistingUsername = "amora@gmail.com";
-		
+
 		user = UserFactory.createUserEntity();
-		
-		
-	
-		
+
+		userDetails = UserDetailsFactory.createCustomAdminUser(existingUsername);
+
 		Mockito.when(repository.findByUsername(existingUsername)).thenReturn(Optional.of(user));
 		Mockito.when(repository.findByUsername(nonExistingUsername)).thenReturn(Optional.empty());
-		
+
 		Mockito.when(userUtil.getLoggedUsername()).thenReturn(existingUsername);
 		Mockito.when(userUtil.getLoggedUsername()).thenReturn(nonExistingUsername);
-		
-		
-		
+
+		Mockito.when(repository.searchUserAndRolesByUsername(existingUsername)).thenReturn(userDetails);
+		Mockito.when(repository.searchUserAndRolesByUsername(nonExistingUsername)).thenReturn(new ArrayList<>());
+
 	}
 
 	@Test
 	public void authenticatedShouldReturnUserEntityWhenUserExists() {
-		
+
 		Mockito.when(userUtil.getLoggedUsername()).thenReturn(existingUsername);
-		
 
 		UserEntity user = service.authenticated();
-		
+
 		Assertions.assertNotNull(user);
 		Assertions.assertEquals(user.getUsername(), existingUsername);
 	}
 
 	@Test
 	public void authenticatedShouldThrowUsernameNotFoundExceptionWhenUserDoesNotExists() {
-		
-		 Assertions.assertThrows(UsernameNotFoundException.class, () -> {
-	            service.authenticated();
-	        });
+
+		Assertions.assertThrows(UsernameNotFoundException.class, () -> {
+			service.authenticated();
+		});
 	}
 
 	@Test
 	public void loadUserByUsernameShouldReturnUserDetailsWhenUserExists() {
-		
-		
+
+		UserDetails result = service.loadUserByUsername(existingUsername);
+
+		Assertions.assertNotNull(result);
+		Assertions.assertEquals(result.getUsername(), existingUsername);
+
 	}
 
 	@Test
