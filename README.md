@@ -14,7 +14,7 @@ Este é um projeto de filmes e avaliações de filmes. A visualização dos dado
 ###
 
 <div align= "justify">
-O desafio consiste em implantar os testes unitários em um projeto pronto. Os testes estão logo abaixo. O relatório do Jacoco deve reportar 100% de cobertura.
+O desafio consiste em implantar os testes unitários com JUnit e Mockito em um projeto SpringBoot com Java. Os testes estão logo abaixo. O relatório do Jacoco deve reportar 100% de cobertura.
 
 </div> 
 
